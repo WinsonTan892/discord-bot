@@ -1,5 +1,8 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
+const minPossibleRating = 800;
+const maxPossibleRating = 4000;
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('random')
@@ -7,10 +10,14 @@ module.exports = {
         .addIntegerOption(option =>
             option.setName("min_rating")
                 .setDescription('Minimum problem rating')
+                .setMinValue(minPossibleRating)
+                .setMaxValue(maxPossibleRating)
         )
         .addIntegerOption(option =>
             option.setName("max_rating")
                 .setDescription('Maximum problem rating')
+                .setMinValue(minPossibleRating)
+                .setMaxValue(maxPossibleRating)
         ),
     async execute(interaction) {
         await interaction.deferReply(); // Acknowledge the command to allow more time for processing
@@ -24,13 +31,19 @@ module.exports = {
             }
 
             const problems = data.result.problems;
-            if (!problems.length) {
-                throw new Error('No problems found in the Codeforces problemset.');
+
+            // define range and filter problems
+            const minRating = interaction.options.getInteger('min_rating') ?? minPossibleRating;
+            const maxRating = interaction.options.getInteger('max_rating') ?? maxPossibleRating;
+            const filteredProblems = problems.filter(problem => minRating <= problem.rating && problem.rating <= maxRating);
+
+            if (!filteredProblems.length) {
+                throw new Error('No problems matched search.');
             }
 
             // select random problem
-            const randomIndex = Math.floor(Math.random() * problems.length);
-            const problem = problems[randomIndex];
+            const randomIndex = Math.floor(Math.random() * filteredProblems.length);
+            const problem = filteredProblems[randomIndex];
 
             // make problem url
             const problemUrl = `https://codeforces.com/problemset/problem/${problem.contestId}/${problem.index}`;
