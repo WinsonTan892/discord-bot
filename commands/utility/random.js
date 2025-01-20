@@ -18,7 +18,17 @@ module.exports = {
                 .setDescription('Maximum problem rating')
                 .setMinValue(minPossibleRating)
                 .setMaxValue(maxPossibleRating)
-        ),
+        )
+        .addStringOption(option =>
+            option.setName("tags")
+                .setDescription('Problems that have this tag')
+                .addChoices(
+                    {name : 'dp',  value: 'dp'},
+                    {name : 'binary search',  value: 'binary search'},
+                )
+            )
+
+    ,
     async execute(interaction) {
         await interaction.deferReply(); // Acknowledge the command to allow more time for processing
 
