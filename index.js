@@ -23,6 +23,25 @@ for (const folder of commandFolders) {
     }
 }
 
+require('dotenv').config();
+const mongoose = require('mongoose');
+
+const clientOptions = { serverApi: { version: '1', strict: true, deprecationErrors: true } };
+
+async function run() {
+    try {
+        // Create a Mongoose client with a MongoClientOptions object to set the Stable API version
+        await mongoose.connect(process.env.MONGO_URI, clientOptions);
+        await mongoose.connection.db.admin().command({ ping: 1 });
+        console.log("Connected to MongoDB Atlas");
+    } finally {
+        // Ensures that the client will close when you finish/error
+        await mongoose.disconnect();
+    }
+}
+run().catch(console.dir);
+
+
 const eventsPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 
