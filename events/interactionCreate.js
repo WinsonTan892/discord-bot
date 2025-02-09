@@ -1,4 +1,20 @@
 const { Events, MessageFlags } = require('discord.js');
+const CompletedProblem = require("../models/CompletedProblem");
+
+// Function to add data
+async function addCompletedProblem(username, problemName) {
+    const newProblem = new CompletedProblem({
+        username,
+        problemName
+    });
+
+    try {
+        const result = await newProblem.save();
+        console.log('Data saved:', result);
+    } catch (err) {
+        console.error('Error saving data:', err);
+    }
+}
 
 module.exports = {
     name: Events.InteractionCreate,
@@ -35,6 +51,16 @@ module.exports = {
             } catch (error) {
                 console.error(error);
             }
+        } else if (interaction.isButton()) {
+
+            if (interaction.customId === 'completed') {
+                // Respond to the button interaction
+                await interaction.reply({
+                    content: `${interaction.user.username} has completed this problem!`,
+                });
+
+            }
+
         }
     },
 };
