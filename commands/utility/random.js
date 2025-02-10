@@ -131,7 +131,30 @@ module.exports = {
             const row = new ActionRowBuilder()
                 .addComponents(completed);
 
-            await interaction.editReply({ embeds: [embed] , components: [row]});
+            await interaction.editReply({
+                embeds: [embed],
+                components: [row],
+                withResponse: true
+            });
+
+            // fetch reply message
+            const message = await interaction.fetchReply();
+
+            // create a message component collector
+            const collector = message.createMessageComponentCollector({
+                componentType: 'BUTTON',
+                time: 3600000 // 1 hr
+            });
+
+            collector.on('collect', async i => {
+                if (i.customId === 'completed') {
+                    await i.reply({
+                        content: `${i.user.username} has completed ${problem.name}!`,
+                        ephemeral: true
+                    });
+                }
+            });
+
         } catch (error) {
             console.error(error);
             await interaction.editReply('Sorry, I couldn\'t fetch a problem at this time.');
