@@ -58,7 +58,7 @@ module.exports = {
 
                 // Respond to the button interaction
                 await interaction.reply({
-                    content: `${interaction.user.username} has completed this ${embed.title}!`,
+                    content: `${interaction.user.username} has completed ${embed.title}!`,
                 });
 
 
