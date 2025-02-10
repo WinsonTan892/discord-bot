@@ -54,10 +54,15 @@ module.exports = {
         } else if (interaction.isButton()) {
 
             if (interaction.customId === 'completed') {
+                const embed = interaction.message.embeds[0];
+
                 // Respond to the button interaction
                 await interaction.reply({
-                    content: `${interaction.user.username} has completed this problem!`,
+                    content: `${interaction.user.username} has completed this ${embed.title}!`,
                 });
+
+
+                await addCompletedProblem(interaction.user.username,embed.title);
 
             }
 
