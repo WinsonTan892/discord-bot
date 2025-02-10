@@ -2,6 +2,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const { token } = require('./config.json');
+const cron = require('node-cron');
+require('dotenv').config();
+const mongoose = require('mongoose');
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
@@ -23,9 +26,6 @@ for (const folder of commandFolders) {
     }
 }
 
-require('dotenv').config();
-const mongoose = require('mongoose');
-
 const clientOptions = { serverApi: { version: '1', strict: true, deprecationErrors: true } };
 
 async function run() {
@@ -34,9 +34,9 @@ async function run() {
         await mongoose.connect(process.env.MONGO_URI, clientOptions);
         await mongoose.connection.db.admin().command({ ping: 1 });
         console.log("Connected to MongoDB Atlas");
-    } finally {
-        // Ensures that the client will close when you finish/error
-        await mongoose.disconnect();
+
+    } catch (error) {
+        console.log(error);
     }
 }
 run().catch(console.dir);
@@ -54,5 +54,27 @@ for (const file of eventFiles) {
         client.on(event.name, (...args) => event.execute(...args));
     }
 }
+
+client.once('ready', () => {
+    console.log(`Logged in as ${client.user.tag}`);
+
+    // Schedule a message every day at 9:00 AM
+    cron.schedule('23 11 * * *', async () => {
+        try {
+            const channel = client.channels.cache.get(process.env.CHANNEL_ID);
+            if (!channel) {
+                console.error('Channel not found');
+                return;
+            }
+
+            await channel.send('Here’s today\'s daily problem:.');
+            console.log('Scheduled message sent');
+        } catch (error) {
+            console.error('Error sending scheduled message:', error);
+        }
+    });
+
+    console.log('Cron job scheduled to run daily at 9:00 AM');
+});
 
 client.login(token);
