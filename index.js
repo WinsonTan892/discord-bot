@@ -1,6 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const { Client, Collection, GatewayIntentBits } = require('discord.js');
+const { Client, Collection, GatewayIntentBits, InteractionType } = require('discord.js');
 const { token } = require('./config.json');
 const cron = require('node-cron');
 require('dotenv').config();
@@ -56,18 +56,50 @@ for (const file of eventFiles) {
 }
 
 client.once('ready', () => {
-    console.log(`Logged in as ${client.user.tag}`);
 
     // Schedule a message every day at 9:00 AM
-    cron.schedule('23 11 * * *', async () => {
+    cron.schedule('06 12 * * *', async () => {
         try {
             const channel = client.channels.cache.get(process.env.CHANNEL_ID);
+
             if (!channel) {
                 console.error('Channel not found');
                 return;
             }
+            // fetch command from bot's registered slash commands
+            const command = client.commands.get('random');
 
-            await channel.send('Here’s today\'s daily problem:.');
+            if (!command) {
+                console.error('Scheduled Command Error: /random command not found');
+                return;
+            }
+
+            // fake interaction object for the command execution
+            const fakeInteraction = {
+                client,
+                commandName: 'random',
+                type: InteractionType.ApplicationCommand,
+                channel,
+                guild: channel.guild,
+                user: client.user, // bot itself runs the command
+                options: {
+                    getInteger: () => null, // No min/max rating
+                    getString: () => null  // No specific tags
+                },
+                deferReply: async () => {}, // No need to defer
+                editReply: async (message) => channel.send(message),
+                reply: async (message) => channel.send(message),
+                followUp: async (message) => channel.send(message),
+                fetchReply: async () => {
+                    const messages = await channel.messages.fetch({ limit: 1 });
+                    return messages.first();
+                },
+                deferred: false
+            };
+
+            await channel.send('Here’s today\'s daily problem:');
+            await command.execute(fakeInteraction); // execute the command as if it were called normally
+
             console.log('Scheduled message sent');
         } catch (error) {
             console.error('Error sending scheduled message:', error);
